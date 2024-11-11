@@ -28,8 +28,9 @@ class Tokenizer:
             model_path (str): The path to the SentencePiece model file.
         """
         # reload tokenizer
-        assert os.path.isfile(model_path), model_path
-        self.sp_model = SentencePieceProcessor(model_file=model_path)
+        assert os.path.isfile(model_path)
+        self.sp_model = SentencePieceProcessor()
+        self.sp_model.Load(model_path)
         logger.info(f"Reloaded SentencePiece model from {model_path}")
 
         # BOS / EOS token IDs
@@ -55,7 +56,7 @@ class Tokenizer:
             List[int]: A list of token IDs.
         """
         assert type(s) is str
-        t = self.sp_model.encode(s)
+        t = self.sp_model.Encode(s)
         if bos:
             t = [self.bos_id] + t
         if eos:
@@ -72,4 +73,4 @@ class Tokenizer:
         Returns:
             str: The decoded string.
         """
-        return self.sp_model.decode(t)
+        return self.sp_model.Decode(t)

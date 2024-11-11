@@ -5,7 +5,7 @@
  @SoftWare: PyCharm
  @Function:
 """
-from transformers import TextDataset,DataCollatorForLanguageModeling,LlamaTokenizer,AutoTokenizer
+from transformers import DataCollatorForLanguageModeling,LlamaTokenizer,AutoTokenizer
 from torch.utils.data import Dataset,DataLoader
 from model import ModelArgs, Transformer
 from transformers import AdamW, get_linear_schedule_with_warmup
@@ -27,9 +27,11 @@ class TextDataset(Dataset):
         # 读取文件内容
         with open(file_path, 'r', encoding='utf-8') as f:
             text = f.read()
+            logging.info(f"未去除重复词总词数：{len(text)}")
         #logging.info(f"原始文件:{text}")
         # 将文本编码为 token ids
         tokenized_text = tokenizer.encode(text, bos=True,eos=True)
+        logging.info(f"转化为tokens后：{tokenized_text}")
         #logging.info(f"转化tokens:{tokenized_text}")
 
        # 填充不足的块或者保留原样
@@ -40,9 +42,10 @@ class TextDataset(Dataset):
             tokenized_text[i : i + block_size]
             for i in range(0, len(tokenized_text) - block_size + 1, block_size)
           ]
-        if len(tokenized_text) % block_size != 0:
-          # 如果最后剩余的部分不足 block_size，保留它
-          self.examples.append(tokenized_text[-(len(tokenized_text) % block_size):])
+          if len(tokenized_text) % block_size != 0:
+            # 如果最后剩余的部分不足 block_size，保留它
+            self.examples.append(tokenized_text[-(len(tokenized_text) % block_size):])
+
 
     def __len__(self):
         return len(self.examples)
@@ -55,13 +58,9 @@ class TextDataset(Dataset):
 dataset = TextDataset("llama/origin/test.txt", tokenizer, block_size=512)
 
 # 创建数据加载器
-dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
+train_dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
 
-# Step 3: 设置数据整理器
-data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer,
-    mlm=False  # 对于自回归模型如 LLaMA，不使用 MLM
-)
+
 
 # 模型参数配置
 model_args = ModelArgs(
@@ -83,7 +82,6 @@ logging.info("模型包装完毕")
 # 优化器和学习率调度器
 optimizer = AdamW(model.parameters(), lr=3e-5)
 num_epochs = 3
-train_dataloader = DataLoader(dataset, batch_size=8, shuffle=True, collate_fn=data_collator)
 total_steps = len(train_dataloader) * num_epochs
 
 scheduler = get_linear_schedule_with_warmup(
