@@ -112,6 +112,7 @@ for epoch in range(num_epochs):
             output_logits = outputs  # 假设模型输出的是 logits
             logging.info(f"模型输出：{output_logits.view(-1, model.module.vocab_size).shape}")
             logging.info(f"标签：{labels}")
+            logging.info(f"修改后的：{labels[:, 2].view(-1)}")
 
             # 目标是下一个 token，labels 是目标 token
             loss = F.cross_entropy(output_logits.view(-1, model.module.vocab_size), labels[:, step].view(-1))
