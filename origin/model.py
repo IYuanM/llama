@@ -459,9 +459,13 @@ class Transformer(nn.Module):
         os.environ['MASTER_PORT'] = '29500'
         os.environ['WORLD_SIZE'] = '1'
         os.environ['RANK'] = '0'
-        init_dist()
-        # 正确初始化模型并行
-        initialize.initialize_model_parallel(1)
+        if not dist.is_initialized():
+            init_dist()
+            # 正确初始化模型并行
+            initialize.initialize_model_parallel(1)
+            print("Distributed environment initialized.")
+        else:
+            print("Distributed environment already initialized.")
         self.params = params
         self.vocab_size = params.vocab_size
         self.n_layers = params.n_layers

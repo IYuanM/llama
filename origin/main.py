@@ -51,7 +51,10 @@ class TextDataset(Dataset):
         return len(self.examples)
 
     def __getitem__(self, idx):
-        return self.examples[idx]
+        # 返回一个字典格式，包含 input_ids 和 labels
+        input_ids = self.examples[idx]
+        # 这里假设 labels 和 input_ids 相同
+        return {'input_ids': input_ids, 'labels': input_ids}
 
 
 # 创建数据集
